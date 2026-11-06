@@ -208,13 +208,16 @@ export function convertBody(body, ctx) {
 }
 
 /* ---------------------------------------------------------------- front matter */
+// Every front-matter key that holds an image path. Blog posts also carry dark-mode and SVG variants.
+const IMAGE_KEY = /^(thumbnail|darkthumbnail|thumbnail_svg|darkthumbnail_svg|image|cover)\s*:\s*(.*)$/;
+
 export function convertFrontMatter(fm, slug, ctx) {
   const lines = fm.split('\n'); const out = []; let hasSlug = false;
   for (const line of lines) {
     let m;
     if ((m = /^redirect_from\s*:(.*)$/.exec(line))) { out.push(`aliases:${m[1]}`); ctx.count('redirectFrom'); continue; }
     if ((m = /^published\s*:\s*(true|false)\s*$/.exec(line))) { if (m[1] === 'false') out.push('draft: true'); continue; }
-    if ((m = /^(thumbnail|image|cover)\s*:\s*(.*)$/.exec(line))) {
+    if ((m = IMAGE_KEY.exec(line))) {
       const v = m[2].trim().replace(/^['"]|['"]$/g, '');
       if (/^\.\.\//.test(v) || /^\/?(static|assets|src)\//.test(v)) { ctx.warn(`${m[1]}: "${v}" is outside the page bundle — move it next to index.md`); out.push(line); }
       else out.push(`${m[1]}: ${v.replace(/^\.\//, '')}`);
